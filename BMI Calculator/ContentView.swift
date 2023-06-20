@@ -9,16 +9,10 @@ import SwiftUI
 
 struct BMICalculationView: View {
 
-    @State var weightValue = ""
-    @State var heightValue = ""
     @State var BMIValue: Double = 0
     @State var classification = ""
-    @State var hasError = false
-    
     @State var height: Double = 0
     @State var weight: Double = 0
-    @State var isChanged = false
-    @FocusState var isInputActive: Bool
 
     var body: some View {
         ZStack {
@@ -48,52 +42,28 @@ struct BMICalculationView: View {
             }
         }
         .edgesIgnoringSafeArea(.all)
-        .alert("Enter all the details", isPresented: $hasError, actions: { }) {
-            Text("All fields are mandatory")
-        }
     }
 }
 
 extension BMICalculationView {
     var heightDetails: some View {
         VStack {
-            Text("Height")
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .font(.title2)
-                .padding(.top)
-            
-            TextField("Enter Height (in meteres)", text: $heightValue)
-                .padding(.all)
-                .textFieldStyle(.roundedBorder)
-                .keyboardType(.decimalPad)
-                .shadow(radius: 5)
-                .focused($isInputActive)
-                .onChange(of: heightValue, perform: { _ in
-                    validateForm()
-                })
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") {
-                            isInputActive = false
-                        }
-                    }
-                }
-            
-            Slider(value: $height, in: 1.2...2.2, onEditingChanged: { _ in
-                if isChanged == false { isChanged = true }
-                heightValue = String(format: "%.2f", height)
-            })
-            .accentColor(.blue)
+            HStack {
+                Text("Height")
+                Spacer()
+                Text("\(height, specifier: "%.2f")")
+            }
             .padding()
-            .onTapGesture {
-                isChanged = true
-            }
-            .onAppear {
-                if height < 1.2 { height = 1.75 }
-                heightValue = String(format: "%.2f", height)
-            }
+            .font(.title)
+            .fontWeight(.semibold)
+            .foregroundColor(.white)
+            
+            Slider(value: $height, in: 1.2...2.2)
+                .accentColor(.blue)
+                .padding()
+                .onAppear {
+                    if height < 1.2 { height = 1.75 }
+                }
         }
     }
 }
@@ -101,38 +71,22 @@ extension BMICalculationView {
 extension BMICalculationView {
     var weightDetails: some View {
         VStack {
-            Text("Weight")
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .font(.title2)
-                .padding(.top)
-            
-            TextField("Enter Weight in Kilograms", text: $weightValue)
-                .padding(.all)
-                .textFieldStyle(.roundedBorder)
-                .keyboardType(.decimalPad)
-                .shadow(radius: 5)
-                .focused($isInputActive)
-                .onChange(of: weightValue) { _ in
-                    if let updatedWeight = Double(weightValue) {
-                        weight = Double(updatedWeight)
-                        validateForm()
-                    }
-                }
-
-            Slider(value: $weight, in: 20...150, onEditingChanged: { _ in
-                if isChanged == false { isChanged = true }
-                weightValue = String(format: "%.2f", weight)
-            })
-            .accentColor(.blue)
+            HStack {
+                Text("Weight")
+                Spacer()
+                Text("\(weight, specifier: "%.2f")")
+            }
             .padding()
-            .onTapGesture {
-                isChanged = true
-            }
-            .onAppear {
-                if weight < 20 { weight = 60 }
-                weightValue = String(format: "%.2f", weight)
-            }
+            .font(.title)
+            .fontWeight(.semibold)
+            .foregroundColor(.white)
+            
+            Slider(value: $weight, in: 20...150)
+                .accentColor(.blue)
+                .padding()
+                .onAppear {
+                    if weight < 20 { weight = 60 }
+                }
         }
     }
 }
@@ -140,10 +94,12 @@ extension BMICalculationView {
 extension BMICalculationView {
     var calculateBMIButton: some View {
         Button {
-            validateForm()
+            generateBMIValue()
         } label: {
             Text("Calculate BMI")
                 .padding()
+                .font(.title2)
+                .fontWeight(.semibold)
                 .foregroundColor(.white)
                 .background(.blue)
         }
@@ -152,27 +108,9 @@ extension BMICalculationView {
 }
 
 extension BMICalculationView {
-    fileprivate func validateForm() {
-        if !weightValue.isEmpty && !heightValue.isEmpty {
-            generateBMIValue()
-            generateClassification()
-        } else {
-            hasError = true
-        }
-    }
-
     fileprivate func generateBMIValue() {
-        var weight: Double = 0
-        var height: Double = 0
-        
-        if let weightInDouble = Double(weightValue) {
-            weight = weightInDouble
-        }
-        
-        if let heightInDouble = Double(heightValue) {
-            height = heightInDouble
-        }
         BMIValue = weight / (height * height)
+        generateClassification()
     }
     
     fileprivate func generateClassification() {
